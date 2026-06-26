@@ -1,0 +1,297 @@
+\chapter{Backend}
+
+\section{Estructura del Proyecto}
+
+El backend sigue la estructura est\'andar de Maven con Spring Boot:
+
+\begin{verbatim}
+src/main/java/com/veterinary/
+  |-- VeterinaryApplication.java       # Entry point @SpringBootApplication
+  |-- config/                          # Configuraciones (4)
+  |   |-- WebConfig.java               # Configuracion web y CORS
+  |   |-- WebSocketConfig.java         # STOMP over SockJS
+  |   |-- MailConfig.java              # JavaMailSender
+  |   |-- JacksonConfig.java           # ObjectMapper personalizado
+  |-- controller/                      # REST Controllers (20)
+  |-- domain/                          # Entidades JPA (20 + 9 enums)
+  |-- dto/                             # Data Transfer Objects (6)
+  |-- repository/                      # Spring Data JPA (19)
+  |-- scheduler/                       # Tareas programadas (1)
+  |   |-- VacunaScheduler.java         # Alertas de vacunacion
+  |-- security/                        # Seguridad JWT (4)
+  |   |-- JwtTokenProvider.java        # Generacion/validacion JWT
+  |   |-- JwtAuthFilter.java           # Filtro de autenticacion
+  |   |-- SecurityConfig.java          # Reglas de acceso
+  |   |-- CustomUserDetailsService.java # Carga de usuarios
+  |-- service/                         # Servicios (22)
+      |-- CitaService.java             # Gestion de citas
+      |-- FacturaService.java          # Facturacion y pagos
+      |-- PdfService.java              # Generacion de PDFs iText 7
+      |-- ReporteService.java          # Reportes y exportacion Excel
+      |-- NotificacionService.java     # Emails con plantillas HTML
+      |-- PagoOnlineService.java       # Integracion Stripe
+      |-- AuditService.java            # Registro de auditoria
+      |-- ... (15 servicios mas)
+\end{verbatim}
+
+\section{Controladores REST}
+
+El sistema expone 20 controladores REST que cubren todos los m\'odulos:
+
+\subsection{Autenticaci\'on}
+
+\texttt{AuthController} -- \texttt{/api/auth}
+\begin{itemize}
+    \item \texttt{POST /login}: Autentica personal o cliente, retorna JWT con claims (email, rol, userId).
+\end{itemize}
+
+\subsection{Gesti\'on Cl\'inica}
+
+Todos los siguientes endpoints est\'an bajo \texttt{/api/medico/} y requieren autenticaci\'on JWT:
+
+\texttt{DashboardController}
+\begin{itemize}
+    \item \texttt{GET /dashboard}: Estad\'isticas del sistema (clientes, mascotas, citas hoy, ingresos del mes, stock bajo).
+\end{itemize}
+
+\texttt{VeterinarioController}
+\begin{itemize}
+    \item CRUD completo de veterinarios (s\'olo ADMIN).
+    \item \texttt{PUT /perfil}: Actualizar perfil propio.
+    \item \texttt{POST /cambiar-password}: Cambiar contrase\~na con verificaci\'on de contrase\~na actual.
+\end{itemize}
+
+\texttt{ClienteController}
+\begin{itemize}
+    \item CRUD de clientes con b\'usqueda de texto libre (\texttt{?q=texto}) sobre nombre, apellido y email.
+\end{itemize}
+
+\texttt{MascotaController}
+\begin{itemize}
+    \item CRUD de mascotas con listado por cliente.
+    \item Vista detallada con citas, historial y vacunas.
+\end{itemize}
+
+\texttt{CitaController}
+\begin{itemize}
+    \item CRUD de citas con validaci\'on de solapamiento.
+    \item WebSocket broadcast en \texttt{/topic/citas} al crear/actualizar/eliminar.
+    \item Notificaci\'on por email al crear la cita.
+\end{itemize}
+
+\texttt{ServicioController} -- Cat\'alogo de servicios con activaci\'on/desactivaci\'on.
+\texttt{MedicamentoController} -- Inventario con ajuste de stock y alertas de stock bajo.
+\texttt{VacunaController} -- Registro de vacunas por mascota con control de pr\'oxima dosis.
+\texttt{HistorialMedicoController} -- Notas de consulta vinculadas a citas.
+\texttt{HospitalizacionController} -- Ingreso/alta de mascotas con control de jaula.
+\texttt{PlanTratamientoController} -- Planes con pasos secuenciados y estados.
+\texttt{ConsentimientoController} -- Consentimientos con firma digital y generaci\'on de PDF.
+\texttt{OdontogramaController} -- Diagrama dental con 42 dientes y 8 estados.
+\texttt{FacturaController} -- Facturaci\'on con PDF, pagos parciales y control de saldo.
+\texttt{ReporteController} -- Reporte de ingresos por per\'iodo con exportaci\'on a Excel.
+
+\subsection{Portal Cliente}
+
+\texttt{PortalClienteController} -- \texttt{/api/portal}
+\begin{itemize}
+    \item \texttt{GET /perfil}: Perfil del cliente autenticado.
+    \item \texttt{GET /citas}: Citas del cliente.
+    \item \texttt{GET /facturas}: Facturas del cliente.
+    \item \texttt{GET /mascotas}: Mascotas del cliente con historial.
+\end{itemize}
+
+\subsection{P\'ublico}
+
+\texttt{PublicBookingController} -- \texttt{/api/public} (sin autenticaci\'on)
+\begin{itemize}
+    \item \texttt{GET /veterinarios}: Lista de veterinarios activos con horarios.
+    \item \texttt{GET /slots?vetId=\&fecha=}: Slots disponibles calculados por horario y citas existentes.
+    \item \texttt{POST /citas}: Crear cita como visitante (validaci\'on de email contra BD).
+\end{itemize}
+
+\subsection{Pagos Online}
+
+\texttt{PagoOnlineController} -- \texttt{/api/pagos}
+\begin{itemize}
+    \item \texttt{POST /stripe/create-payment-intent}: Crea intenci\'on de pago Stripe vinculada a una factura.
+    \item \texttt{POST /stripe/webhook}: Webhook de confirmaci\'on de pago.
+\end{itemize}
+
+\subsection{Auditor\'ia}
+
+\texttt{AuditController} -- \texttt{/api/admin/auditoria}
+\begin{itemize}
+    \item \texttt{GET /}: Listado paginado de logs de auditor\'ia ordenados por fecha descendente.
+\end{itemize}
+
+\section{Capa de Servicios}
+
+22 servicios que encapsulan la l\'ogica de negocio. Los m\'as relevantes:
+
+\begin{itemize}
+    \item \texttt{CitaService}: Validaci\'on de disponibilidad (evita solapamientos usando JPQL), notificaciones por email y broadcast WebSocket.
+    \item \texttt{FacturaService}: Creaci\'on autom\'atica de n\'umero de factura (FAC-yyyyMMdd-HHmmss-XXXX), descuento de stock al incluir medicamentos, control de pagos parciales.
+    \item \texttt{MedicamentoService}: Ajuste de stock con registro autom\'atico de movimiento de inventario (trazabilidad completa).
+    \item \texttt{NotificacionService}: Plantillas HTML para emails de recordatorios, alertas de vacunas y notificaciones de facturas.
+    \item \texttt{PdfService}: Generaci\'on de PDFs con iText 7 (facturas con detalle de items, consentimientos informados).
+    \item \texttt{ReporteService}: Reporte de ingresos con Chart.js y exportaci\'on a Excel con Apache POI.
+    \item \texttt{PagoOnlineService}: Integraci\'on con Stripe Payment Intents en modo sandbox cuando no hay API key configurada.
+    \item \texttt{PublicBookingService}: C\'alculo de slots disponibles basado en horarios de veterinarios y citas existentes.
+    \item \texttt{AuditService}: Registro centralizado de operaciones CRUD con metadatos (usuario, IP, fecha).
+\end{itemize}
+
+\subsection{Ejemplo: Validaci\'on de Solapamiento de Citas}
+
+\begin{lstlisting}[language=Java, caption=M\'etodo JPQL para detectar solapamiento]
+@Query("SELECT c FROM Cita c WHERE c.veterinario.id = :vetId "
+     + "AND c.estado NOT IN ('CANCELADA', 'NO_ASISTIO') "
+     + "AND c.fechaHoraInicio < :fin AND c.fechaHoraFin > :inicio "
+     + "AND (:citaExcluirId IS NULL OR c.id <> :citaExcluirId)")
+List<Cita> findCitasOcupadas(@Param("vetId") Long vetId,
+                             @Param("inicio") LocalDateTime inicio,
+                             @Param("fin") LocalDateTime fin,
+                             @Param("citaExcluirId") Long citaExcluirId);
+\end{lstlisting}
+
+\subsection{Ejemplo: Generaci\'on de PDF con iText 7}
+
+\begin{lstlisting}[language=Java, caption=Generaci\'on de PDF de factura]
+public ByteArrayInputStream generarFacturaPdf(Factura factura) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    PdfWriter writer = new PdfWriter(out);
+    PdfDocument pdf = new PdfDocument(writer);
+    Document document = new Document(pdf, PageSize.A4);
+
+    document.add(new Paragraph("PETCLINIC VETERINARY CLINIC")
+        .setFontSize(20).setBold().setTextAlignment(TextAlignment.CENTER));
+    document.add(new Paragraph("Factura: " + factura.getNumeroFactura())
+        .setFontSize(14).setTextAlignment(TextAlignment.CENTER));
+    document.add(new Paragraph(" "));
+
+    document.add(new Paragraph("Cliente: "
+        + factura.getCliente().getNombre() + " "
+        + factura.getCliente().getApellido()));
+    document.add(new Paragraph("Fecha: "
+        + factura.getFechaEmision().format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))));
+
+    Table table = new Table(new float[]{3, 1, 1, 1});
+    table.addHeaderCell("Descripcion");
+    table.addHeaderCell("Cant.");
+    table.addHeaderCell("P. Unit.");
+    table.addHeaderCell("Subtotal");
+    for (DetalleFactura d : factura.getDetalles()) {
+        table.addCell(d.getDescripcionLinea());
+        table.addCell(String.valueOf(d.getCantidad()));
+        table.addCell("$" + d.getPrecioUnitario());
+        table.addCell("$" + d.getSubtotal());
+    }
+    document.add(table);
+    document.add(new Paragraph("Total: $" + factura.getTotal())
+        .setFontSize(16).setBold().setTextAlignment(TextAlignment.RIGHT));
+    document.close();
+    return new ByteArrayInputStream(out.toByteArray());
+}
+\end{lstlisting}
+
+\subsection{Ejemplo: Integraci\'on con Stripe}
+
+\begin{lstlisting}[language=Java, caption=Creaci\'on de Payment Intent en PagoOnlineService]
+public String createPaymentIntent(Long facturaId) {
+    Factura factura = facturaRepo.findById(facturaId)
+        .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
+
+    // Stripe maneja montos en centavos
+    long montoCentavos = (long)(factura.getTotal() * 100);
+
+    PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+        .setAmount(montoCentavos)
+        .setCurrency("mxn")
+        .putMetadata("facturaId", facturaId.toString())
+        .putMetadata("clienteId", factura.getCliente().getId().toString())
+        .build();
+
+    try {
+        PaymentIntent intent = PaymentIntent.create(params);
+        factura.setStripePaymentIntentId(intent.getId());
+        facturaRepo.save(factura);
+        return intent.getClientSecret();
+    } catch (StripeException e) {
+        throw new RuntimeException("Error al crear payment intent: "
+            + e.getMessage());
+    }
+}
+\end{lstlisting}
+
+\section{Configuraci\'on}
+
+\subsection{Application Properties}
+
+\begin{lstlisting}[caption=Configuraci\'on principal]
+server.port=8090
+
+# Base de Datos PostgreSQL
+spring.datasource.url=jdbc:postgresql://localhost:5432/veterinary_db
+spring.datasource.username=veterinary_user
+spring.datasource.password=veterinary_pass
+
+# JPA / Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=false
+
+# JWT
+app.jwt.secret=${JWT_SECRET:ClaveSuperSeguraParaFirmarTokensJWT2024}
+app.jwt.expiration=${JWT_EXPIRATION:1800000}
+
+# Stripe
+stripe.api-key=${STRIPE_API_KEY:sk_test_placeholder}
+stripe.webhook-secret=${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
+
+# Mail (SMTP)
+spring.mail.host=${MAIL_HOST:smtp.gmail.com}
+spring.mail.port=${MAIL_PORT:587}
+spring.mail.username=${MAIL_USERNAME:}
+spring.mail.password=${MAIL_PASSWORD:}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Clinica
+app.clinic.nombre=PetClinic Veterinary Clinic
+app.clinic.email=contacto@petclinic.com
+\end{lstlisting}
+
+\subsection{DataInitializer}
+
+Al arrancar por primera vez, \texttt{DataInitializer} inserta datos de prueba utilizando el patr\'on \texttt{CommandLineRunner}:
+
+\begin{itemize}
+    \item 3 veterinarios: Admin Sistema (ADMIN, admin@petclinic.com/Admin123), Laura Garc\'ia (VETERINARIO, Cirug\'ia, vet@petclinic.com/Vet123), Carlos L\'opez (RECEPCIONISTA, recepcion@petclinic.com/Recep123).
+    \item 2 clientes: Ana Mart\'inez (ana@email.com, con portal activo/Ana123), Pedro Ram\'irez (pedro@email.com).
+    \item 3 mascotas: Max (Golden Retriever, 30kg), Luna (Siam\'es, 4kg), Rocky (Bulldog Franc\'es, 12kg).
+    \item 5 servicios: Consulta General (\$500), Vacunaci\'on (\$350), Cirug\'ia (\$2,500), Desparasitaci\'on (\$200), Grooming (\$400).
+    \item 3 medicamentos: Amoxicilina 500mg (100 tabs, stock m\'inimo 10), Meloxicam 5mg (50 ml, stock m\'inimo 5), Frontline Plus (3 pipetas, stock m\'inimo 2).
+    \item 2 citas programadas para el d\'ia siguiente con estados PROGRAMADA y CONFIRMADA.
+\end{itemize}
+
+\section{Manejo de Excepciones}
+
+El \texttt{GlobalExceptionHandler} captura y formatea errores de manera consistente retornando JSON con estructura \texttt{\{error: mensaje, details: [...]\}}:
+
+\begin{longtable}{|p{5cm}|p{4cm}|p{5cm}|}
+\hline
+\textbf{Excepci\'on} & \textbf{C\'odigo HTTP} & \textbf{Uso} \\
+\hline
+EntityNotFoundException & 404 & Recurso no encontrado (ej: cliente, mascota, factura) \\
+\hline
+IllegalArgumentException & 400 & Par\'ametros inv\'alidos (ej: fechas incorrectas, datos duplicados) \\
+\hline
+AccessDeniedException & 403 & Sin permisos para el recurso solicitado \\
+\hline
+MethodArgumentNotValidException & 400 & Errores de validaci\'on de DTOs (\texttt{@NotBlank}, \texttt{@Email}, etc.) \\
+\hline
+RuntimeException & Variable & Determinado por el mensaje (ej: ``Stock insuficiente'' $\rightarrow$ 400) \\
+\hline
+Exception & 500 & Error interno del servidor \\
+\hline
+\end{longtable}

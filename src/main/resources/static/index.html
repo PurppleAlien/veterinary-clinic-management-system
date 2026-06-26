@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetClinic - Veterinary Clinic</title>
+<script>if(localStorage.getItem('vet-theme')&&localStorage.getItem('vet-theme')!=='light'){document.documentElement.setAttribute('data-theme',localStorage.getItem('vet-theme'))}</script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" rel="stylesheet">
+<link href="css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="loginSection" class="login-container">
+    <div class="login-card" style="max-width:900px">
+        <div class="login-left">
+            <div class="pet-animals">
+                <span class="pet pet-dog">🐕</span>
+                <span class="pet pet-cat">🐈</span>
+                <span class="pet pet-dog2">🐩</span>
+                <span class="pet pet-cat2">🐱</span>
+                <span class="pet pet-rabbit">🐇</span>
+                <span class="pet pet-bird">🐦</span>
+            </div>
+            <div class="login-welcome">
+                <h1>PetClinic</h1>
+                <p class="text-muted">Sistema de Gestión Veterinaria</p>
+                <p class="welcome-text">Administra tu clínica veterinaria de forma sencilla: citas, pacientes, facturación y más.</p>
+            </div>
+        </div>
+        <div class="login-right">
+            <ul class="nav nav-tabs mb-3" id="loginTabs">
+                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabLogin">Iniciar Sesión</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabBooking" onclick="loadPublicVets()">Agendar Cita</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tabLogin">
+                    <div id="loginError" class="alert alert-danger d-none"></div>
+                    <div class="mb-2"><label class="form-label">Email</label><input type="email" id="loginEmail" class="form-control" placeholder="correo@ejemplo.com"></div>
+                    <div class="mb-2"><label class="form-label">Contraseña</label><input type="password" id="loginPassword" class="form-control" placeholder="••••••"></div>
+                    <div class="mb-2"><label class="form-label">Tipo</label><select id="loginTipo" class="form-select"><option value="ADMIN">Personal</option><option value="CLIENTE">Cliente</option></select></div>
+                    <button class="btn btn-primary w-100 mb-3" onclick="doLogin()">Iniciar Sesión</button>
+                    <div class="demo-credentials">
+                        <div class="demo-label">Credenciales de demostración</div>
+                        <span class="demo-badge" onclick="fillCredentials('admin@petclinic.com','Admin123','ADMIN')">🛠️ Admin</span>
+                        <span class="demo-badge" onclick="fillCredentials('vet@petclinic.com','Vet123','ADMIN')">👨‍⚕️ Veterinario</span>
+                        <span class="demo-badge" onclick="fillCredentials('ana@email.com','Ana123','CLIENTE')">👤 Cliente</span>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="tabBooking">
+                    <h5 class="mb-3">Agenda tu Cita</h5>
+                    <div class="mb-2"><label class="form-label">Veterinario</label><select id="pubVet" class="form-select" onchange="loadPublicSlots()"><option value="">Seleccione...</option></select></div>
+                    <div class="mb-2"><label class="form-label">Fecha</label><input id="pubDate" class="form-control" type="date" onchange="loadPublicSlots()"></div>
+                    <div class="mb-2"><label class="form-label">Horarios Disponibles</label><div id="pubSlots" class="d-flex flex-wrap gap-1" style="min-height:40px"><small class="text-muted">Seleccione veterinario y fecha</small></div></div>
+                    <input type="hidden" id="pubHora">
+                    <div class="mb-2"><label class="form-label">ID de Mascota</label><input id="pubMascotaId" class="form-control" type="number" placeholder="Ej: 1"></div>
+                    <div class="mb-2"><label class="form-label">Tu Email</label><input id="pubEmail" class="form-control" type="email" placeholder="correo@ejemplo.com"></div>
+                    <div class="mb-2"><label class="form-label">Motivo (opcional)</label><textarea id="pubMotivo" class="form-control" rows="2" placeholder="Ej: Revisión general"></textarea></div>
+                    <button class="btn btn-success w-100" onclick="savePublicCita()">Agendar Cita</button>
+                    <div id="pubResult" class="alert alert-success mt-2 d-none">Cita agendada exitosamente.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="appSection" class="d-none">
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <i class="bi bi-shield-plus sidebar-logo"></i>
+        <span class="sidebar-title">PetClinic</span>
+    </div>
+    <nav class="sidebar-nav" id="staffNav">
+        <div class="nav-group-label">Principal</div>
+        <a onclick="showSection('dashboard')"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+        <a onclick="showSection('agenda')"><i class="bi bi-calendar-event"></i><span>Agenda</span></a>
+
+        <div class="nav-group-label">Gestión</div>
+        <a onclick="showSection('clientes')"><i class="bi bi-people"></i><span>Clientes</span></a>
+        <a onclick="showSection('mascotas')"><i class="bi bi-heart"></i><span>Mascotas</span></a>
+        <a onclick="showSection('facturacion')"><i class="bi bi-receipt"></i><span>Facturación</span></a>
+        <a onclick="showSection('reportes')"><i class="bi bi-graph-up"></i><span>Reportes</span></a>
+
+        <div class="nav-group-label">Clínica</div>
+        <a onclick="showSection('historial')"><i class="bi bi-file-text"></i><span>Historial Médico</span></a>
+        <a onclick="showSection('vacunas')"><i class="bi bi-eyedrop"></i><span>Vacunas</span></a>
+        <a onclick="showSection('hospitalizaciones')"><i class="bi bi-hospital"></i><span>Hospitalización</span></a>
+        <a onclick="showSection('planes')"><i class="bi bi-list-check"></i><span>Planes Tratamiento</span></a>
+        <a onclick="showSection('consentimientos')"><i class="bi bi-file-earmark-check"></i><span>Consentimientos</span></a>
+        <a onclick="showSection('odontograma')"><i class="bi bi-grid-3x3-gap"></i><span>Odontograma</span></a>
+
+        <div class="nav-group-label">Catálogos</div>
+        <a onclick="showSection('servicios')"><i class="bi bi-bag"></i><span>Servicios</span></a>
+        <a onclick="showSection('medicamentos')"><i class="bi bi-capsule"></i><span>Medicamentos</span></a>
+
+        <div class="nav-group-label">Sistema</div>
+        <a id="navAdmin" onclick="showSection('admin')"><i class="bi bi-shield-lock"></i><span>Admin</span></a>
+        <a id="navAuditoria" onclick="showSection('auditoria')"><i class="bi bi-journal"></i><span>Auditoría</span></a>
+        <a onclick="showSection('configuracion')"><i class="bi bi-gear"></i><span>Configuración</span></a>
+        <a href="#" onclick="logout()" class="text-danger"><i class="bi bi-box-arrow-left"></i><span>Cerrar Sesión</span></a>
+    </nav>
+    <nav class="sidebar-nav" id="clientNav" style="display:none">
+        <div class="nav-group-label">Mi Cuenta</div>
+        <a onclick="showClientSection('inicio')"><i class="bi bi-house-door"></i><span>Inicio</span></a>
+        <a onclick="showClientSection('mascotas')"><i class="bi bi-heart"></i><span>Mis Mascotas</span></a>
+        <a onclick="showClientSection('citas')"><i class="bi bi-calendar-event"></i><span>Mis Citas</span></a>
+        <a onclick="showClientSection('facturas')"><i class="bi bi-receipt"></i><span>Mis Facturas</span></a>
+        <a onclick="showClientSection('perfil')"><i class="bi bi-person-gear"></i><span>Mi Perfil</span></a>
+        <a href="#" onclick="logout()" class="text-danger"><i class="bi bi-box-arrow-left"></i><span>Cerrar Sesión</span></a>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="topbar">
+        <button class="btn btn-link" onclick="document.getElementById('sidebar').classList.toggle('collapsed')"><i class="bi bi-list fs-4"></i></button>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn btn-primary btn-sm" onclick="openNewCita()"><i class="bi bi-plus"></i> Nueva Cita</button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i> <span id="userName">Usuario</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><span class="dropdown-item-text"><small id="userRol"></small></span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="showSection('configuracion')"><i class="bi bi-gear"></i> Configuración</a></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-left"></i> Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="sections" class="p-3">
+
+        <section id="sec-dashboard" class="section-content">
+            <h4 class="mb-3"><i class="bi bi-grid"></i> Dashboard</h4>
+            <div class="row g-3 mb-3">
+                <div class="col-md-3"><div class="card stat-card text-white bg-primary"><div class="card-body"><h5 id="statClientes">0</h5><small>Clientes</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-success"><div class="card-body"><h5 id="statMascotas">0</h5><small>Mascotas</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-info"><div class="card-body"><h5 id="statVets">0</h5><small>Veterinarios</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-warning"><div class="card-body"><h5 id="statCitasHoy">0</h5><small>Citas Hoy</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-danger"><div class="card-body"><h5 id="statPendientes">0</h5><small>Citas Pendientes</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-secondary"><div class="card-body"><h5 id="statHospitalizados">0</h5><small>Hospitalizados</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-dark"><div class="card-body"><h5 id="statStockBajo">0</h5><small>Stock Bajo</small></div></div></div>
+            </div>
+        </section>
+
+        <section id="sec-agenda" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-calendar-event"></i> Agenda de Citas</h4>
+            <div id="calendar"></div>
+        </section>
+
+        <section id="sec-clientes" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-people"></i> Clientes</h4><button class="btn btn-primary btn-sm" onclick="openNewCliente()"><i class="bi bi-plus"></i> Nuevo</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Nombre</th><th>Apellido</th><th>Email</th><th>Teléfono</th><th>Mascotas</th><th>Acciones</th></tr></thead><tbody id="tablaClientes"></tbody></table></div>
+        </section>
+
+        <section id="sec-mascotas" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-heart"></i> Mascotas</h4><button class="btn btn-primary btn-sm" onclick="openNewMascota()"><i class="bi bi-plus"></i> Nueva</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Nombre</th><th>Especie</th><th>Raza</th><th>Género</th><th>Dueño</th><th>Acciones</th></tr></thead><tbody id="tablaMascotas"></tbody></table></div>
+        </section>
+
+        <section id="sec-facturacion" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-receipt"></i> Facturación</h4><button class="btn btn-primary btn-sm" onclick="openNewFactura()"><i class="bi bi-plus"></i> Nueva Factura</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>N° Factura</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaFacturas"></tbody></table></div>
+        </section>
+
+        <section id="sec-reportes" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-graph-up"></i> Reportes de Ingresos</h4>
+            <div class="row mb-3"><div class="col-auto"><h3 id="reporteTotal">$0.00</h3><small class="text-muted">Total ingresos</small></div><div class="col-auto"><button class="btn btn-outline-success mt-3" onclick="downloadExcel()"><i class="bi bi-file-earmark-excel"></i> Descargar Excel</button></div></div>
+            <canvas id="reportChart" height="200"></canvas>
+        </section>
+
+        <section id="sec-historial" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-file-text"></i> Historial Médico</h4><button class="btn btn-primary btn-sm" onclick="openNewHistorial()"><i class="bi bi-plus"></i> Nueva Nota</button></div>
+            <div class="alert alert-info">Seleccione una mascota desde <a href="#" onclick="showSection('mascotas')">Mascotas</a> para ver su historial.</div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Fecha</th><th>Motivo</th><th>Diagnóstico</th><th>Medicación</th><th>Acciones</th></tr></thead><tbody id="tablaHistorial"></tbody></table></div>
+        </section>
+
+        <section id="sec-vacunas" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-eyedrop"></i> Vacunas</h4><button class="btn btn-primary btn-sm" onclick="openNewVacuna()"><i class="bi bi-plus"></i> Registrar Vacuna</button></div>
+            <div class="alert alert-info">Seleccione una mascota desde <a href="#" onclick="showSection('mascotas')">Mascotas</a> para ver sus vacunas.</div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Nombre</th><th>Fecha Aplicación</th><th>Próxima Dosis</th><th>Fabricante</th><th>Acciones</th></tr></thead><tbody id="tablaVacunas"></tbody></table></div>
+        </section>
+
+        <section id="sec-hospitalizaciones" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-hospital"></i> Hospitalizaciones</h4><button class="btn btn-primary btn-sm" onclick="openNewHospitalizacion()"><i class="bi bi-plus"></i> Nueva</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Mascota</th><th>Check-In</th><th>Motivo</th><th>Jaula</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaHospitalizaciones"></tbody></table></div>
+        </section>
+
+        <section id="sec-planes" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-list-check"></i> Planes de Tratamiento</h4><button class="btn btn-primary btn-sm" onclick="openNewPlan()"><i class="bi bi-plus"></i> Nuevo Plan</button></div>
+            <div class="alert alert-info">Seleccione una mascota desde <a href="#" onclick="showSection('mascotas')">Mascotas</a> para ver sus planes.</div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Título</th><th>Estado</th><th>Costo Est.</th><th>Avance</th><th>Acciones</th></tr></thead><tbody id="tablaPlanes"></tbody></table></div>
+        </section>
+
+        <section id="sec-consentimientos" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-file-earmark-check"></i> Consentimientos Informados</h4><button class="btn btn-primary btn-sm" onclick="openNewConsentimiento()"><i class="bi bi-plus"></i> Nuevo</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Título</th><th>Procedimiento</th><th>Cliente</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaConsentimientos"></tbody></table></div>
+        </section>
+
+        <section id="sec-odontograma" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3">
+                <h4><i class="bi bi-grid-3x3-gap"></i> Odontograma Canino</h4>
+                <div>
+                    <button class="btn btn-outline-info btn-sm" onclick="showOdontogramHelp()"><i class="bi bi-question-circle"></i> Leyenda</button>
+                </div>
+            </div>
+            <div class="alert alert-info">Seleccione una mascota desde <a href="#" onclick="showSection('mascotas')">Mascotas</a> y luego use el botón <strong>Odontograma</strong> en el detalle.</div>
+            <div id="odontogramaView"></div>
+        </section>
+
+        <section id="sec-servicios" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-bag"></i> Servicios</h4><button class="btn btn-primary btn-sm" onclick="openNewServicio()"><i class="bi bi-plus"></i> Nuevo</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Código</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaServicios"></tbody></table></div>
+        </section>
+
+        <section id="sec-medicamentos" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-capsule"></i> Medicamentos</h4><button class="btn btn-primary btn-sm" onclick="openNewMedicamento()"><i class="bi bi-plus"></i> Nuevo</button></div>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Unidad</th><th>Stock</th><th>Stock Min</th><th>Precio</th><th>Acciones</th></tr></thead><tbody id="tablaMedicamentos"></tbody></table></div>
+        </section>
+
+        <section id="sec-admin" class="section-content d-none">
+            <div class="d-flex justify-content-between mb-3"><h4><i class="bi bi-shield-lock"></i> Administración</h4><button class="btn btn-primary btn-sm" onclick="openNewVeterinario()"><i class="bi bi-plus"></i> Nuevo Veterinario</button></div>
+            <div id="adminPanel"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Especialidad</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaVeterinarios"></tbody></table></div></div>
+        </section>
+
+        <section id="sec-auditoria" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-journal"></i> Auditoría</h4>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Acción</th><th>Entidad</th><th>Detalle</th><th>Fecha</th></tr></thead><tbody id="tablaAuditoria"></tbody></table></div>
+        </section>
+
+        <section id="sec-configuracion" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-gear"></i> Configuración</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card"><div class="card-header">Perfil</div><div class="card-body">
+                        <div class="mb-3"><label class="form-label">Nombre</label><input id="perfNombre" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label">Apellido</label><input id="perfApellido" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label">Teléfono</label><input id="perfTel" class="form-control"></div>
+                        <button class="btn btn-primary" onclick="updatePerfil()">Actualizar</button>
+                    </div></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card"><div class="card-header">Cambiar Contraseña</div><div class="card-body">
+                        <div class="mb-3"><label class="form-label">Actual</label><input type="password" id="passActual" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label">Nueva</label><input type="password" id="passNueva" class="form-control"></div>
+                        <button class="btn btn-warning" onclick="changePassword()">Cambiar</button>
+                    </div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Client Portal Sections -->
+        <section id="sec-cliente-inicio" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-house-door"></i> Bienvenido</h4>
+            <div id="cliWelcomeName" class="mb-3"></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-3"><div class="card stat-card text-white bg-primary"><div class="card-body"><h5 id="cliStatMascotas">0</h5><small>Mis Mascotas</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-success"><div class="card-body"><h5 id="cliStatCitas">0</h5><small>Próximas Citas</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-warning"><div class="card-body"><h5 id="cliStatPendiente">$0.00</h5><small>Pendiente de Pago</small></div></div></div>
+                <div class="col-md-3"><div class="card stat-card text-white bg-info"><div class="card-body"><h5 id="cliStatHistorial">0</h5><small>Registros Médicos</small></div></div></div>
+            </div>
+        </section>
+
+        <section id="sec-cliente-mascotas" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-heart"></i> Mis Mascotas</h4>
+            <div class="row g-3" id="clienteMascotasList"></div>
+        </section>
+
+        <section id="sec-cliente-citas" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-calendar-event"></i> Mis Citas</h4>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Fecha</th><th>Mascota</th><th>Veterinario</th><th>Motivo</th><th>Estado</th></tr></thead><tbody id="clienteCitasTable"></tbody></table></div>
+        </section>
+
+        <section id="sec-cliente-facturas" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-receipt"></i> Mis Facturas</h4>
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>N° Factura</th><th>Fecha</th><th>Total</th><th>Pagado</th><th>Estado</th><th>PDF</th></tr></thead><tbody id="clienteFacturasTable"></tbody></table></div>
+        </section>
+
+        <section id="sec-cliente-perfil" class="section-content d-none">
+            <h4 class="mb-3"><i class="bi bi-person-gear"></i> Mi Perfil</h4>
+            <div class="row"><div class="col-md-6">
+                <div class="card"><div class="card-header">Información Personal</div><div class="card-body">
+                    <div class="mb-3"><label class="form-label">Nombre</label><input id="cliPerfNombre" class="form-control" readonly></div>
+                    <div class="mb-3"><label class="form-label">Email</label><input id="cliPerfEmail" class="form-control" readonly></div>
+                    <div class="mb-3"><label class="form-label">Teléfono</label><input id="cliPerfTelefono" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label">Dirección</label><textarea id="cliPerfDireccion" class="form-control" rows="2"></textarea></div>
+                    <button class="btn btn-primary" onclick="updateClientePerfil()">Actualizar</button>
+                    <div id="cliPerfMsg" class="mt-2"></div>
+                </div></div>
+            </div></div>
+        </section>
+        <!-- End Client Portal Sections -->
+
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="modalCita" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="citaId">
+        <div class="mb-3"><label class="form-label">Mascota ID</label><input id="citaMascota" class="form-control" placeholder="ID de la mascota"></div>
+        <div class="mb-3"><label class="form-label">Motivo</label><input id="citaMotivo" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Notas</label><textarea id="citaNotas" class="form-control" rows="2"></textarea></div>
+        <div class="row"><div class="col"><div class="mb-3"><label class="form-label">Inicio</label><input type="datetime-local" id="citaInicio" class="form-control"></div></div>
+        <div class="col"><div class="mb-3"><label class="form-label">Fin</label><input type="datetime-local" id="citaFin" class="form-control"></div></div></div>
+        <div class="mb-3"><label class="form-label">Estado</label><select id="citaEstado" class="form-select" onchange="document.getElementById('citaCancelMotivo').style.display=this.value==='CANCELADA'?'block':'none'">
+            <option value="PROGRAMADA">Programada</option><option value="CONFIRMADA">Confirmada</option><option value="EN_CURSO">En Curso</option><option value="COMPLETADA">Completada</option><option value="CANCELADA">Cancelada</option><option value="NO_ASISTIO">No Asistió</option>
+        </select></div>
+        <div class="mb-3 d-none" id="citaCancelMotivo"><label class="form-label">Motivo de cancelación</label><input id="citaCancelMotivoInput" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveCita()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalCliente" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="clienteId">
+        <div class="row"><div class="col"><div class="mb-3"><label class="form-label">Nombre</label><input id="cliNombre" class="form-control"></div></div><div class="col"><div class="mb-3"><label class="form-label">Apellido</label><input id="cliApellido" class="form-control"></div></div></div>
+        <div class="mb-3"><label class="form-label">Email</label><input id="cliEmail" class="form-control" type="email"></div>
+        <div class="mb-3"><label class="form-label">Teléfono</label><input id="cliTel" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Dirección</label><textarea id="cliDir" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">RFC/CIF</label><input id="cliRfc" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveCliente()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalMascota" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Mascota</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="mascotaId">
+        <div class="mb-3"><label class="form-label">Nombre</label><input id="petNombre" class="form-control"></div>
+        <div class="row"><div class="col"><div class="mb-3"><label class="form-label">Especie</label><select id="petEspecie" class="form-select"><option value="CANINO">CANINO</option><option value="FELINO">FELINO</option><option value="EQUINO">EQUINO</option><option value="BOVINO">BOVINO</option><option value="AVIAR">AVIAR</option><option value="EXOTICO">EXÓTICO</option><option value="OTRO">OTRO</option></select></div></div>
+        <div class="col"><div class="mb-3"><label class="form-label">Género</label><select id="petGenero" class="form-select"><option value="MACHO">MACHO</option><option value="HEMBRA">HEMBRA</option></select></div></div></div>
+        <div class="mb-3"><label class="form-label">Raza</label><input id="petRaza" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Color</label><input id="petColor" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Peso (kg)</label><input id="petPeso" class="form-control" type="number" step="0.1"></div>
+        <div class="mb-3"><label class="form-label">Alergias</label><textarea id="petAlergias" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">Condiciones Médicas</label><textarea id="petCondiciones" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">ID Cliente Dueño</label><input id="petClienteId" class="form-control" type="number"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveMascota()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalServicio" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Servicio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="servId">
+        <div class="mb-3"><label class="form-label">Nombre</label><input id="servNombre" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Descripción</label><textarea id="servDesc" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">Precio Base</label><input id="servPrecio" class="form-control" type="number" step="0.01"></div>
+        <div class="mb-3"><label class="form-label">Código Interno</label><input id="servCodigo" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveServicio()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalMedicamento" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Medicamento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="medId">
+        <div class="mb-3"><label class="form-label">Nombre</label><input id="medNombre" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Descripción</label><textarea id="medDesc" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">Unidad</label><select id="medUnidad" class="form-select"><option value="tableta">Tableta</option><option value="ml">Mililitro</option><option value="pipeta">Pipeta</option><option value="inyección">Inyección</option><option value="cápsula">Cápsula</option></select></div>
+        <div class="mb-3"><label class="form-label">Precio Unitario</label><input id="medPrecio" class="form-control" type="number" step="0.01"></div>
+        <div class="mb-3"><label class="form-label">Stock Mínimo</label><input id="medStockMin" class="form-control" type="number"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveMedicamento()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalStock" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Ajustar Stock</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="stockMedId">
+        <div class="mb-3"><label class="form-label">Tipo</label><select id="stockTipo" class="form-select"><option value="ENTRADA">Entrada</option><option value="SALIDA">Salida</option><option value="AJUSTE">Ajuste</option></select></div>
+        <div class="mb-3"><label class="form-label">Cantidad</label><input id="stockCantidad" class="form-control" type="number"></div>
+        <div class="mb-3"><label class="form-label">Motivo</label><input id="stockMotivo" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveAjusteStock()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalFactura" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nueva Factura</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="facturaId">
+        <div class="mb-3"><label class="form-label">ID Cliente</label><input id="facCliente" class="form-control" type="number"></div>
+        <div class="mb-3"><label class="form-label">Observaciones</label><textarea id="facObs" class="form-control" rows="2"></textarea></div>
+        <hr><h6>Agregar Items</h6>
+        <div class="row g-2 mb-2"><div class="col"><select id="facTipoItem" class="form-select"><option value="SERVICIO">Servicio</option><option value="MEDICAMENTO">Medicamento</option></select></div>
+        <div class="col"><input id="facItemId" class="form-control" placeholder="ID del item"></div>
+        <div class="col"><input id="facCantidad" class="form-control" type="number" value="1"></div>
+        <div class="col"><button class="btn btn-outline-primary" onclick="addFacturaDetalle()">+</button></div></div>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Descripción</th><th>Cant</th><th>P.Unit</th><th>Desc</th><th>Subtotal</th><th></th></tr></thead><tbody id="facturaDetallesBody"></tbody></table></div>
+        <h5 class="text-end">Total: <span id="facturaTotal">$0.00</span></h5>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveFactura()">Crear Factura</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalPago" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Registrar Pago</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="pagoFacturaId">
+        <div class="mb-3"><label class="form-label">Monto</label><input id="pagoMonto" class="form-control" type="number" step="0.01"></div>
+        <div class="mb-3"><label class="form-label">Método</label><select id="pagoMetodo" class="form-select"><option value="EFECTIVO">Efectivo</option><option value="TARJETA_CREDITO">Tarjeta Crédito</option><option value="TARJETA_DEBITO">Tarjeta Débito</option><option value="TRANSFERENCIA">Transferencia</option></select></div>
+        <div class="mb-3"><label class="form-label">Referencia</label><input id="pagoRef" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-success" onclick="savePago()">Registrar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalHistorial" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Nota de Consulta</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Motivo</label><input id="histMotivo" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Diagnóstico</label><textarea id="histDiagnostico" class="form-control" rows="3"></textarea></div>
+        <div class="mb-3"><label class="form-label">Procedimiento Realizado</label><textarea id="histProcedimiento" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">Medicación Indicada</label><textarea id="histMedicacion" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">Observaciones</label><textarea id="histObs" class="form-control" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveHistorial()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalVacuna" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Registrar Vacuna</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Nombre</label><input id="vacNombre" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Fecha Aplicación</label><input id="vacFecha" class="form-control" type="date"></div>
+        <div class="mb-3"><label class="form-label">Próxima Dosis</label><input id="vacProxima" class="form-control" type="date"></div>
+        <div class="mb-3"><label class="form-label">Número Lote</label><input id="vacLote" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Fabricante</label><input id="vacFab" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Observaciones</label><textarea id="vacObs" class="form-control" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveVacuna()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalHospitalizacion" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Hospitalización</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label class="form-label">ID Mascota</label><input id="hospMascotaId" class="form-control" type="number"></div>
+        <div class="mb-3"><label class="form-label">Motivo</label><textarea id="hospMotivo" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label class="form-label">Jaula</label><input id="hospJaula" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Notas</label><textarea id="hospNotas" class="form-control" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveHospitalizacion()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalPlan" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Plan de Tratamiento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Título</label><input id="planTitulo" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Descripción</label><textarea id="planDesc" class="form-control" rows="3"></textarea></div>
+        <div class="mb-3"><label class="form-label">Costo Estimado</label><input id="planCosto" class="form-control" type="number" step="0.01"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="savePlan()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalConsentimiento" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Consentimiento Informado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label class="form-label">ID Cliente</label><input id="consClienteId" class="form-control" type="number"></div>
+        <div class="mb-3"><label class="form-label">Título</label><input id="consTitulo" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Tipo de Procedimiento</label><input id="consTipo" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Contenido</label><textarea id="consContenido" class="form-control" rows="5"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveConsentimiento()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalViewCliente" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Detalle del Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <p><strong>Nombre:</strong> <span id="viewClienteNombre"></span></p>
+        <p><strong>Email:</strong> <span id="viewClienteEmail"></span></p>
+        <p><strong>Teléfono:</strong> <span id="viewClienteTel"></span></p>
+        <p><strong>Dirección:</strong> <span id="viewClienteDir"></span></p>
+        <h6>Mascotas</h6>
+        <ul id="viewClienteMascotas" class="list-group"></ul>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalMascotaDetail" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Detalle de Mascota</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="row"><div class="col-md-6">
+            <p><strong>Nombre:</strong> <span id="detMascotaNombre"></span></p>
+            <p><strong>Especie:</strong> <span id="detMascotaEspecie"></span></p>
+            <p><strong>Raza:</strong> <span id="detMascotaRaza"></span></p>
+            <p><strong>Color:</strong> <span id="detMascotaColor"></span></p>
+        </div><div class="col-md-6">
+            <p><strong>Género:</strong> <span id="detMascotaGenero"></span></p>
+            <p><strong>Peso:</strong> <span id="detMascotaPeso"></span></p>
+            <p><strong>Dueño:</strong> <span id="detMascotaCliente"></span></p>
+        </div></div>
+        <p><strong>Alergias:</strong> <span id="detMascotaAlergias"></span></p>
+        <p><strong>Condiciones Médicas:</strong> <span id="detMascotaCondiciones"></span></p>
+        <h6>Últimas Citas</h6>
+        <ul id="detMascotaCitas" class="list-group"></ul>
+        <div class="mt-2 d-flex gap-1 flex-wrap">
+            <button class="btn btn-sm btn-outline-primary" onclick="bootstrap.Modal.getInstance('#modalMascotaDetail').hide();showSection('historial');loadHistorial(currentMascotaId);">Ver Historial</button>
+            <button class="btn btn-sm btn-outline-info" onclick="bootstrap.Modal.getInstance('#modalMascotaDetail').hide();showSection('vacunas');loadVacunas();">Ver Vacunas</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="bootstrap.Modal.getInstance('#modalMascotaDetail').hide();showSection('planes');loadPlanes();">Ver Planes</button>
+            <button class="btn btn-sm btn-outline-warning" onclick="bootstrap.Modal.getInstance('#modalMascotaDetail').hide();openOdontograma(currentMascotaId, document.getElementById('detMascotaNombre').textContent);"><i class="bi bi-grid-3x3-gap"></i> Odontograma</button>
+        </div>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalViewFactura" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Detalle de Factura</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="facturaViewContent"></div>
+    <div class="modal-footer">
+        <a class="btn btn-outline-secondary" id="facturaPdfLink" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalViewPlan" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Plan de Tratamiento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="planViewContent"></div>
+</div></div></div>
+
+<div class="modal fade" id="modalViewConsentimiento" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Consentimiento</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <h5 id="viewConsTitulo"></h5>
+        <p><strong>Procedimiento:</strong> <span id="viewConsTipo"></span></p>
+        <hr><p id="viewConsContenido"></p>
+        <hr><p id="viewConsEstado"></p>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalOdontograma" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Odontograma - <span id="odontoMascotaNombre"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="odontoId">
+        <input type="hidden" id="odontoMascotaId">
+        <div class="row mb-2"><div class="col"><label class="form-label">Fecha</label><input id="odontoFecha" class="form-control" type="date"></div>
+        <div class="col"><label class="form-label">Notas</label><input id="odontoNotas" class="form-control" placeholder="Observaciones generales"></div></div>
+        <div class="mb-2">
+            <div class="btn-group btn-group-sm" id="odontoToolbar">
+                <button class="btn btn-outline-success active" data-estado="SANO" style="border-color:#4caf50;color:#4caf50">Sano</button>
+                <button class="btn btn-outline-warning" data-estado="TARTARO" style="border-color:#795548;color:#795548">Tártaro</button>
+                <button class="btn btn-outline-danger" data-estado="CARIES" style="border-color:#ff5722;color:#ff5722">Caries</button>
+                <button class="btn btn-outline-danger" data-estado="FRACTURA" style="border-color:#f44336;color:#f44336">Fractura</button>
+                <button class="btn btn-outline-secondary" data-estado="AUSENTE">Ausente</button>
+                <button class="btn btn-outline-info" data-estado="PERIODONTAL" style="border-color:#e91e63;color:#e91e63">Periodontal</button>
+                <button class="btn btn-outline-primary" data-estado="OBTURADO">Obturado</button>
+                <button class="btn btn-outline-purple" data-estado="ENDODONCIA" style="border-color:#9c27b0;color:#9c27b0">Endodoncia</button>
+            </div>
+        </div>
+        <div id="odontoChart" class="odontograma-chart"></div>
+        <div id="odontoLegend" class="mt-1 small text-muted">Seleccione un estado y haga clic en un diente para marcarlo.</div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-danger" onclick="deleteCurrentOdontograma()" id="odontoDeleteBtn" style="display:none"><i class="bi bi-trash"></i> Eliminar</button>
+        <button class="btn btn-primary" onclick="saveOdontograma()"><i class="bi bi-save"></i> Guardar</button>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalOdontogramaView" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Odontograma - <span id="odontoViewMascotaNombre"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <p><strong>Fecha:</strong> <span id="odontoViewFecha"></span> | <strong>Veterinario:</strong> <span id="odontoViewVet"></span></p>
+        <p><strong>Notas:</strong> <span id="odontoViewNotas"></span></p>
+        <div id="odontoViewChart" class="odontograma-chart"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-outline-primary" onclick="editOdontogramaFromView()"><i class="bi bi-pencil"></i> Editar</button>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalOdontogramaList" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Odontogramas de <span id="odontoListMascotaNombre"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="odontoListBody"></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="newOdontograma()"><i class="bi bi-plus"></i> Nuevo</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalOdontogramaHelp" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Leyenda - Estados Dentales</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div id="odontoHelpContent"></div>
+        <hr>
+        <p class="small text-muted">Fórmula dental canina adulta: 42 dientes (I 3/3, C 1/1, P 4/4, M 2/3)</p>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="modalVeterinario" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Veterinario</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <input type="hidden" id="vetId">
+        <div class="row"><div class="col"><div class="mb-3"><label class="form-label">Nombre</label><input id="vetNombre" class="form-control"></div></div><div class="col"><div class="mb-3"><label class="form-label">Apellido</label><input id="vetApellido" class="form-control"></div></div></div>
+        <div class="mb-3"><label class="form-label">Email</label><input id="vetEmail" class="form-control" type="email"></div>
+        <div class="mb-3"><label class="form-label">Especialidad</label><input id="vetEspecialidad" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Cédula Profesional</label><input id="vetCedula" class="form-control"></div>
+        <div class="mb-3"><label class="form-label">Rol</label><select id="vetRol" class="form-select"><option value="VETERINARIO">Veterinario</option><option value="ADMIN">Admin</option><option value="RECEPCIONISTA">Recepcionista</option></select></div>
+        <div class="mb-3"><label class="form-label">Contraseña (dejar vacío si no cambia)</label><input id="vetPass" class="form-control" type="password"></div>
+        <div class="row"><div class="col"><div class="mb-3"><label class="form-label">Horario Inicio</label><input id="vetInicio" class="form-control" type="time"></div></div><div class="col"><div class="mb-3"><label class="form-label">Horario Fin</label><input id="vetFin" class="form-control" type="time"></div></div>
+        <div class="col"><div class="mb-3"><label class="form-label">Duración (min)</label><input id="vetDuracion" class="form-control" type="number"></div></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="saveVeterinario()">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="modalClienteHistorial" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Historial de <span id="cliHistMascotaNombre"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="cliHistorialList"></div>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/vet-extras.js"></script>
+<script>
+function fillCredentials(email, password, tipo) {
+    document.getElementById('loginEmail').value = email;
+    document.getElementById('loginPassword').value = password;
+    document.getElementById('loginTipo').value = tipo;
+    document.getElementById('loginError').classList.add('d-none');
+}
+
+async function doLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const tipo = document.getElementById('loginTipo').value;
+    try {
+        const resp = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, tipo })
+        });
+        if (!resp.ok) { const err = await resp.json(); throw new Error(err.error || 'Error de autenticación'); }
+        const data = await resp.json();
+        localStorage.setItem('vet_token', data.token);
+        localStorage.setItem('vet_user', JSON.stringify({ nombre: data.nombre, email: data.email, rol: data.rol, userId: data.userId }));
+        window.location.reload();
+    } catch(e) {
+        const errDiv = document.getElementById('loginError');
+        errDiv.textContent = e.message;
+        errDiv.classList.remove('d-none');
+    }
+}
+</script>
+</body>
+</html>

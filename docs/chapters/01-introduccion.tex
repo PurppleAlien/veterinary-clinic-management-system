@@ -1,0 +1,101 @@
+\chapter{Introducci\'on}
+
+\section{Descripci\'on del Proyecto}
+
+PetClinic es un sistema de gesti\'on para cl\'inicas veterinarias desarrollado como aplicaci\'on web moderna. El sistema permite administrar todos los aspectos operativos de una cl\'inica veterinaria: gesti\'on de clientes, pacientes (mascotas), citas, facturaci\'on, inventario de medicamentos, historial m\'edico, hospitalizaci\'on, planes de tratamiento, consentimientos informados, odontograma canino, y m\'as.
+
+El proyecto est\'a construido con una arquitectura de capas utilizando Java 21 y Spring Boot 3.2.3 en el backend, con una base de datos PostgreSQL, y un frontend SPA (\textit{Single-Page Application}) construido con Bootstrap 5, FullCalendar 6 y Chart.js.
+
+\subsection{Objetivos del Sistema}
+
+\begin{itemize}
+    \item Digitalizar y centralizar la informaci\'on de pacientes y clientes.
+    \item Facilitar la gesti\'on de citas con un calendario interactivo.
+    \item Automatizar la facturaci\'on con generaci\'on de PDF y control de inventario.
+    \item Proveer un portal de cliente para consulta de citas y facturas.
+    \item Implementar alertas autom\'aticas de vacunaci\'on v\'ia correo electr\'onico.
+    \item Gestionar hospitalizaciones, planes de tratamiento y consentimientos.
+    \item Incluir un odontograma canino interactivo para diagn\'ostico dental.
+    \item Integrar pagos en l\'inea mediante Stripe.
+\end{itemize}
+
+\subsection{P\'ublico Objetivo}
+
+El sistema est\'a dise\~nado para:
+
+\begin{itemize}
+    \item \textbf{Administradores:} Control total del sistema, gesti\'on de usuarios y auditor\'ia.
+    \item \textbf{Veterinarios:} Gesti\'on cl\'inica completa (citas, historial, facturaci\'on).
+    \item \textbf{Recepcionistas:} Lectura de datos y creaci\'on de clientes/citas.
+    \item \textbf{Clientes:} Portal propio para consultar citas, facturas e historial de mascotas.
+\end{itemize}
+
+\section{Tecnolog\'ias Utilizadas}
+
+\subsection{Lenguaje y Framework}
+
+\begin{itemize}
+    \item \textbf{Java 21:} \'Ultima versi\'on LTS con caracter\'isticas modernas como \textit{Pattern Matching}, \textit{Records}, y \textit{Sealed Classes}.
+    \item \textbf{Spring Boot 3.2.3:} Framework de aplicaciones que simplifica la configuraci\'on y el despliegue.
+    \item \textbf{Spring Data JPA / Hibernate:} ORM para la capa de persistencia.
+    \item \textbf{Spring Security:} Framework de autenticaci\'on y autorizaci\'on.
+    \item \textbf{Spring WebSocket:} Comunicaci\'on en tiempo real para notificaciones de citas.
+    \item \textbf{Spring Mail:} Env\'io de correos electr\'onicos (alertas de vacunas, recordatorios).
+    \item \textbf{Spring AOP:} Programaci\'on orientada a aspectos.
+\end{itemize}
+
+\subsection{Base de Datos}
+
+\begin{itemize}
+    \item \textbf{PostgreSQL 14+:} Base de datos relacional en producci\'on.
+    \item \textbf{H2:} Base de datos en memoria para pruebas.
+\end{itemize}
+
+\subsection{Seguridad}
+
+\begin{itemize}
+    \item \textbf{JJWT 0.12.3:} Biblioteca para generaci\'on y validaci\'on de tokens JWT.
+    \item \textbf{BCrypt:} Algoritmo de hashing para contrase\~nas.
+\end{itemize}
+
+\subsection{Frontend}
+
+\begin{itemize}
+    \item \textbf{Bootstrap 5.3:} Framework CSS para dise\~no responsive.
+    \item \textbf{Bootstrap Icons:} Conjunto de iconos vectoriales.
+    \item \textbf{FullCalendar 6.1:} Calendario interactivo para gesti\'on de citas.
+    \item \textbf{Chart.js 4.4:} Biblioteca de gr\'aficos para reportes.
+    \item \textbf{Vanilla JS:} JavaScript nativo sin frameworks adicionales, con patr\'on de m\'odulos por secci\'on.
+\end{itemize}
+
+\subsection{Otras Tecnolog\'ias}
+
+\begin{itemize}
+    \item \textbf{iText 7 Core 8.0.3:} Generaci\'on de PDFs (facturas, consentimientos).
+    \item \textbf{Apache POI 5.2.5:} Generaci\'on de archivos Excel (reportes de ingresos).
+    \item \textbf{Stripe Java 28.1.0:} Integraci\'on de pagos en l\'inea.
+    \item \textbf{Maven:} Herramienta de construcci\'on y gesti\'on de dependencias.
+    \item \textbf{JUnit 5:} Framework de pruebas unitarias y de integraci\'on.
+\end{itemize}
+
+\section{Convenciones del Proyecto}
+
+\begin{itemize}
+    \item \textbf{Arquitectura en capas:} Controller $\rightarrow$ Service $\rightarrow$ Repository $\rightarrow$ DB.
+    \item \textbf{DTO Pattern:} Separaci\'on de entidades JPA de los objetos de transferencia de datos.
+    \item \textbf{Inyecci\'on de dependencias:} Constructor injection en todas las clases.
+    \item \textbf{Global Exception Handler:} Manejo centralizado de excepciones con \texttt{@RestControllerAdvice}.
+    \item \textbf{Auditor\'ia:} Registro de acciones CRUD con detalles de usuario y direcci\'on IP.
+    \item \textbf{WebSocket:} Notificaciones en tiempo real para cambios en citas.
+\end{itemize}
+
+\section{Requisitos del Sistema}
+
+\begin{itemize}
+    \item Java 21 o superior.
+    \item PostgreSQL 14 o superior.
+    \item Maven 3.8+.
+    \item Navegador web moderno (Chrome, Firefox, Edge).
+    \item (Opcional) Cuenta de Stripe para pagos en l\'inea.
+    \item (Opcional) Cuenta SMTP para env\'io de correos.
+\end{itemize}

@@ -1,0 +1,119 @@
+\documentclass[12pt,oneside]{book}
+
+%% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=3cm,bottom=3cm,headheight=15pt}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{verbatim}
+%% --- Colors for listings ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\lstdefinelanguage{JavaScript}{
+    keywords={async, await, break, case, catch, class, const, continue, debugger, default, delete, do, else, export, extends, false, finally, for, function, if, import, in, instanceof, let, new, null, of, return, super, switch, this, throw, true, try, typeof, var, void, while, with, yield},
+    sensitive=true,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]',
+    morestring=[b]"
+}
+
+\lstdefinelanguage{Java}{
+    keywords={abstract, assert, boolean, break, byte, case, catch, class, const, continue, default, do, double, else, enum, extends, false, final, finally, float, for, goto, if, implements, import, instanceof, int, interface, long, native, new, null, package, private, protected, public, return, short, static, strictfp, super, switch, synchronized, this, throw, throws, transient, true, try, void, volatile, while},
+    sensitive=true,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]',
+    morestring=[b]"
+}
+
+%% --- Header / Footer ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{PetClinic}
+\fancyfoot[C]{\thepage}
+
+%% --- Title formatting ---
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+%% --- Metadata ---
+\title{
+    \vspace*{3cm}
+    {\Huge \textbf{PetClinic}}\\[0.5cm]
+    {\Large Sistema de Gesti\'on de Cl\'inica Veterinaria}\\[0.5cm]
+    {\large Documentaci\'on T\'ecnica del Proyecto}
+}
+\author{Departamento de Desarrollo}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+\listoffigures
+\newpage
+
+\lstlistoflistings
+\newpage
+
+%% --- Include chapters ---
+\input{chapters/01-introduccion}
+\input{chapters/02-arquitectura}
+\input{chapters/03-modelo-datos}
+\input{chapters/04-backend}
+\input{chapters/05-frontend}
+\input{chapters/06-seguridad}
+\input{chapters/07-modulos}
+\input{chapters/08-pruebas}
+\input{chapters/09-despliegue}
+
+\end{document}

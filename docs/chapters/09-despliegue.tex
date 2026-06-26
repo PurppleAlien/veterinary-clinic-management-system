@@ -1,0 +1,290 @@
+\chapter{Despliegue}
+
+\section{Requisitos del Servidor}
+
+\begin{itemize}
+    \item Java 21 o superior (OpenJDK 21 LTS recomendado).
+    \item PostgreSQL 14 o superior.
+    \item Maven 3.8+ (para compilaci\'on desde c\'odigo fuente).
+    \item Al menos 512 MB de RAM para la aplicaci\'on (1 GB recomendado).
+    \item Conexi\'on SMTP saliente para notificaciones por email (opcional).
+    \item Cuenta de Stripe con API keys para pagos en l\'inea (opcional).
+\end{itemize}
+
+\section{Configuraci\'on de Base de Datos}
+
+\subsection{Crear Base de Datos PostgreSQL}
+
+\begin{lstlisting}[caption=Creaci\'on de base de datos y usuario en PostgreSQL]
+sudo -u postgres psql -c "CREATE DATABASE veterinary_db;"
+sudo -u postgres psql -c "CREATE USER veterinary_user WITH PASSWORD 'veterinary_pass';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE veterinary_db TO veterinary_user;"
+\end{lstlisting}
+
+\subsection{Verificar Conexi\'on}
+
+\begin{lstlisting}[caption=Verificar que la base de datos es accesible]
+psql -U veterinary_user -d veterinary_db -h localhost
+\end{lstlisting}
+
+\section{Ejecuci\'on en Desarrollo}
+
+\begin{lstlisting}[caption=Ejecutar la aplicaci\'on en modo desarrollo]
+mvn spring-boot:run
+\end{lstlisting}
+
+La aplicaci\'on estar\'a disponible en \texttt{http://localhost:8090}. La base de datos se crea y puebla autom\'aticamente al primer inicio gracias a \texttt{spring.jpa.hibernate.ddl-auto=update} y el \texttt{DataInitializer}.
+
+\section{Compilaci\'on para Producci\'on}
+
+\begin{lstlisting}[caption=Compilar y empaquetar como JAR]
+mvn clean package -DskipTests
+\end{lstlisting}
+
+Genera el archivo \texttt{target/veterinary-clinic-management-system-1.0.0.jar}.
+
+\begin{lstlisting}[caption=Ejecutar JAR compilado con variables de entorno]
+export JWT_SECRET="clave-secreta-muy-segura-12345"
+export JWT_EXPIRATION=1800000
+export MAIL_HOST=smtp.gmail.com
+export MAIL_USERNAME=notificaciones@petclinic.com
+export MAIL_PASSWORD=contrasena-de-app
+export STRIPE_API_KEY=sk_live_...
+export STRIPE_WEBHOOK_SECRET=whsec_...
+
+java -jar target/veterinary-clinic-management-system-1.0.0.jar
+\end{lstlisting}
+
+\section{Despliegue con Docker}
+
+\subsection{Dockerfile}
+
+\begin{lstlisting}[caption=Dockerfile multi-etapa para imagen optimizada]
+FROM maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+FROM openjdk:21-jdk-slim
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+EXPOSE 8090
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+\end{lstlisting}
+
+\subsection{Docker Compose}
+
+\begin{lstlisting}[caption=Docker Compose con PostgreSQL y aplicaci\'on]
+version: '3.8'
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: veterinary_db
+      POSTGRES_USER: veterinary_user
+      POSTGRES_PASSWORD: veterinary_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/veterinary_db
+      SPRING_DATASOURCE_USERNAME: veterinary_user
+      SPRING_DATASOURCE_PASSWORD: veterinary_pass
+      JWT_SECRET: clave-secreta-docker-2024
+      JWT_EXPIRATION: 1800000
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Construir y ejecutar con Docker Compose]
+docker-compose build
+docker-compose up -d
+docker-compose logs -f app  # Ver logs en tiempo real
+\end{lstlisting}
+
+\section{Despliegue con systemd (Producci\'on Linux)}
+
+Para ejecutar la aplicaci\'on como servicio del sistema:
+
+\begin{lstlisting}[caption=Archivo de servicio systemd]
+[Unit]
+Description=PetClinic Veterinary Clinic
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=petclinic
+WorkingDirectory=/opt/petclinic
+Environment="JWT_SECRET=..."
+Environment="JWT_EXPIRATION=1800000"
+Environment="MAIL_HOST=smtp.gmail.com"
+ExecStart=/usr/bin/java -jar /opt/petclinic/app.jar
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Instalar y gestionar el servicio]
+sudo cp petclinic.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable petclinic
+sudo systemctl start petclinic
+sudo systemctl status petclinic
+\end{lstlisting}
+
+\section{Proxy Inverso con Nginx}
+
+Para entornos de producci\'on con dominio propio:
+
+\begin{lstlisting}[caption=Configuraci\'on de Nginx como proxy inverso]
+server {
+    listen 80;
+    server_name petclinic.midominio.com;
+
+    location / {
+        proxy_pass http://localhost:8090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /ws {
+        proxy_pass http://localhost:8090;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}
+\end{lstlisting}
+
+\section{Variables de Entorno}
+
+El sistema soporta configuraci\'on mediante variables de entorno para entornos productivos, lo que permite despliegues sin modificar archivos de configuraci\'on:
+
+\begin{longtable}{|p{4cm}|p{6cm}|p{4cm}|}
+\hline
+\textbf{Variable} & \textbf{Descripci\'on} & \textbf{Valor por Defecto} \\
+\hline
+JWT\_SECRET & Clave secreta para firmar tokens JWT (HMAC-SHA384) & (valor interno) \\
+JWT\_EXPIRATION & Duraci\'on del token en milisegundos & 1800000 (30 min) \\
+MAIL\_HOST & Servidor SMTP para env\'io de correos & smtp.gmail.com \\
+MAIL\_PORT & Puerto SMTP & 587 \\
+MAIL\_USERNAME & Usuario SMTP & (vac\'io) \\
+MAIL\_PASSWORD & Contrase\~na SMTP & (vac\'io) \\
+STRIPE\_API\_KEY & Clave API de Stripe (pk\_/sk\_) & sk\_test\_placeholder \\
+STRIPE\_WEBHOOK\_SECRET & Secreto de webhook Stripe & whsec\_placeholder \\
+FRONTEND\_URL & URL del frontend para enlaces en emails & http://localhost:8090 \\
+UPLOAD\_DIR & Directorio de subida de archivos & ./uploads \\
+\hline
+\end{longtable}
+
+\section{Estructura Completa del Proyecto}
+
+\begin{verbatim}
+veterinary-clinic-management-system/
+  |-- pom.xml                          # Dependencias Maven
+  |-- README.md                        # Instrucciones rapidas
+  |-- .gitignore
+  |-- Dockerfile                       # Imagen Docker multi-etapa
+  |-- docker-compose.yml               # Orquestacion Docker
+  |-- docs/                            # Documentacion LaTeX
+  |   |-- main.tex
+  |   |-- chapters/
+  |   |-- images/
+  |-- src/
+      |-- main/
+      |   |-- java/com/veterinary/
+      |   |   |-- VeterinaryApplication.java
+      |   |   |-- config/
+      |   |   |-- controller/          # 20 REST controllers
+      |   |   |-- domain/              # 20 entidades + 9 enums
+      |   |   |-- dto/                 # 6 DTOs
+      |   |   |-- repository/          # 19 repositorios
+      |   |   |-- scheduler/
+      |   |   |-- security/            # 4 clases de seguridad
+      |   |   |-- service/             # 22 servicios
+      |   |-- resources/
+      |       |-- application.properties
+      |       |-- static/
+      |           |-- index.html
+      |           |-- css/app.css
+      |           |-- js/{api.js, app.js, vet-extras.js}
+      |-- test/
+          |-- java/com/veterinary/
+          |   |-- VeterinarySystemIntegrationTest.java   # 15 tests
+          |   |-- NewFeaturesIntegrationTest.java         # 15 tests
+          |-- resources/
+              |-- application.properties
+\end{verbatim}
+
+\section{Comandos \'Utiles}
+
+\begin{longtable}{|p{6cm}|p{8cm}|}
+\hline
+\textbf{Comando} & \textbf{Descripci\'on} \\
+\hline
+mvn spring-boot:run & Ejecutar la aplicaci\'on en desarrollo \\
+mvn clean install & Compilar y empaquetar \\
+mvn test & Ejecutar pruebas unitarias y de integraci\'on \\
+mvn test -Dtest=ClaseTest\#metodo & Ejecutar prueba espec\'ifica \\
+docker-compose up -d & Desplegar con Docker Compose \\
+docker-compose logs -f app & Ver logs de la aplicaci\'on \\
+java -jar target/*.jar & Ejecutar JAR compilado \\
+sudo systemctl start petclinic & Iniciar servicio systemd \\
+\hline
+\end{longtable}
+
+\section{Resoluci\'on de Problemas}
+
+\subsection{Error de Conexi\'on a Base de Datos}
+
+Verificar que PostgreSQL est\'e en ejecuci\'on y accesible:
+
+\begin{lstlisting}[caption=Verificar conexi\'on PostgreSQL]
+sudo systemctl status postgresql
+psql -U veterinary_user -d veterinary_db -h localhost
+\end{lstlisting}
+
+Si el error persiste, verificar que \texttt{pg\_hba.conf} permita conexiones locales con autenticaci\'on por contrase\~na.
+
+\subsection{Puerto Ocupado}
+
+Si el puerto 8090 ya est\'a en uso, se puede cambiar en \texttt{application.properties} o v\'ia variable de entorno:
+
+\begin{lstlisting}
+server.port=8091
+# O via entorno:
+export SERVER_PORT=8091
+\end{lstlisting}
+
+\subsection{Error de Compilaci\'on}
+
+Asegurar que Java 21 est\'e configurado correctamente:
+
+\begin{lstlisting}
+java -version  # Debe mostrar 21.x
+mvn -version   # Debe usar Java 21
+\end{lstlisting}
+
+\subsection{Error de JWT}
+
+Si los tokens JWT no se validan correctamente, verificar que \texttt{JWT\_SECRET} tenga al menos 256 bits (32 caracteres) y sea consistente entre reinicios de la aplicaci\'on.
+
+\subsection{WebSocket no conecta}
+
+Verificar que el proxy inverso (si existe) tenga configurada la actualizaci\'on de protocolo WebSocket (\texttt{Upgrade} y \texttt{Connection} headers). Para Nginx, asegurar que la ubicaci\'on \texttt{/ws} tenga las directivas \texttt{proxy\_set\_header Upgrade} y \texttt{proxy\_set\_header Connection "upgrade"}.

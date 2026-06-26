@@ -1,0 +1,129 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {chapter}{\numberline {1}Introducci\'on}{8}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Descripci\'on del Proyecto}{8}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Objetivos del Sistema}{8}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}P\'ublico Objetivo}{9}{subsection.1.1.2}%
+\contentsline {section}{\numberline {1.2}Tecnolog\'ias Utilizadas}{9}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Lenguaje y Framework}{9}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Base de Datos}{9}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Seguridad}{9}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Frontend}{10}{subsection.1.2.4}%
+\contentsline {subsection}{\numberline {1.2.5}Otras Tecnolog\'ias}{10}{subsection.1.2.5}%
+\contentsline {section}{\numberline {1.3}Convenciones del Proyecto}{10}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Requisitos del Sistema}{10}{section.1.4}%
+\contentsline {chapter}{\numberline {2}Arquitectura del Sistema}{12}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Visi\'on General}{12}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Diagrama de Capas}{13}{subsection.2.1.1}%
+\contentsline {section}{\numberline {2.2}Flujo de una Petici\'on}{13}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Flujo de Notificaciones en Tiempo Real (WebSocket)}{14}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Patrones de Dise\~no}{15}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Patrones Implementados}{15}{subsection.2.4.1}%
+\contentsline {section}{\numberline {2.5}Diagrama de Componentes}{16}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Capas del Sistema}{16}{subsection.2.5.1}%
+\contentsline {paragraph}{Capa de Presentaci\'on (Frontend)}{16}{subsection.2.5.1}%
+\contentsline {paragraph}{Capa de API REST (Controller)}{16}{subsection.2.5.1}%
+\contentsline {paragraph}{Capa de Negocio (Service)}{16}{subsection.2.5.1}%
+\contentsline {paragraph}{Capa de Persistencia (Repository)}{16}{subsection.2.5.1}%
+\contentsline {paragraph}{Capa de Seguridad}{16}{subsection.2.5.1}%
+\contentsline {section}{\numberline {2.6}Esquema de Navegaci\'on}{16}{section.2.6}%
+\contentsline {chapter}{\numberline {3}Modelo de Datos}{18}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Diagrama Entidad-Relaci\'on}{18}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Entidades del Sistema}{18}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Enumeraciones}{20}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Relaciones Principales}{21}{subsection.3.1.3}%
+\contentsline {subsection}{\numberline {3.1.4}Listado Completo de Repositorios}{21}{subsection.3.1.4}%
+\contentsline {chapter}{\numberline {4}Backend}{23}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Estructura del Proyecto}{23}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Controladores REST}{24}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Autenticaci\'on}{24}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Gesti\'on Cl\'inica}{24}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Portal Cliente}{25}{subsection.4.2.3}%
+\contentsline {subsection}{\numberline {4.2.4}P\'ublico}{25}{subsection.4.2.4}%
+\contentsline {subsection}{\numberline {4.2.5}Pagos Online}{25}{subsection.4.2.5}%
+\contentsline {subsection}{\numberline {4.2.6}Auditor\'ia}{25}{subsection.4.2.6}%
+\contentsline {section}{\numberline {4.3}Capa de Servicios}{26}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Ejemplo: Validaci\'on de Solapamiento de Citas}{26}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Ejemplo: Generaci\'on de PDF con iText 7}{27}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Ejemplo: Integraci\'on con Stripe}{27}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Configuraci\'on}{28}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Application Properties}{28}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}DataInitializer}{29}{subsection.4.4.2}%
+\contentsline {section}{\numberline {4.5}Manejo de Excepciones}{29}{section.4.5}%
+\contentsline {chapter}{\numberline {5}Frontend}{31}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Arquitectura del Frontend}{31}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Estructura de Archivos}{31}{subsection.5.1.1}%
+\contentsline {section}{\numberline {5.2}Pantalla de Login}{31}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Dashboard}{32}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Agenda de Citas}{33}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Gesti\'on de Clientes y Mascotas}{35}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Facturaci\'on}{35}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Reportes}{37}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Odontograma Canino}{38}{section.5.8}%
+\contentsline {section}{\numberline {5.9}Portal del Cliente}{39}{section.5.9}%
+\contentsline {section}{\numberline {5.10}Sistema de Temas}{40}{section.5.10}%
+\contentsline {section}{\numberline {5.11}API Cliente (api.js)}{41}{section.5.11}%
+\contentsline {chapter}{\numberline {6}Seguridad}{43}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Autenticaci\'on JWT}{43}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}JwtTokenProvider}{43}{subsection.6.1.1}%
+\contentsline {subsection}{\numberline {6.1.2}JwtAuthFilter}{44}{subsection.6.1.2}%
+\contentsline {section}{\numberline {6.2}Control de Acceso por Roles}{45}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}SecurityConfig}{45}{subsection.6.2.1}%
+\contentsline {section}{\numberline {6.3}CustomUserDetailsService}{46}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Auditor\'ia}{47}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Protecci\'on de Contrase\~nas}{48}{section.6.5}%
+\contentsline {section}{\numberline {6.6}CORS}{49}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Protecci\'on CSRF}{49}{section.6.7}%
+\contentsline {chapter}{\numberline {7}M\'odulos del Sistema}{50}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Visi\'on General}{50}{section.7.1}%
+\contentsline {section}{\numberline {7.2}M\'odulo de Veterinarios}{50}{section.7.2}%
+\contentsline {section}{\numberline {7.3}M\'odulo de Clientes}{51}{section.7.3}%
+\contentsline {section}{\numberline {7.4}M\'odulo de Mascotas}{51}{section.7.4}%
+\contentsline {section}{\numberline {7.5}M\'odulo de Citas}{52}{section.7.5}%
+\contentsline {section}{\numberline {7.6}M\'odulo de Facturaci\'on}{52}{section.7.6}%
+\contentsline {section}{\numberline {7.7}M\'odulo de Servicios}{52}{section.7.7}%
+\contentsline {section}{\numberline {7.8}M\'odulo de Medicamentos e Inventario}{53}{section.7.8}%
+\contentsline {section}{\numberline {7.9}M\'odulo de Historial M\'edico}{54}{section.7.9}%
+\contentsline {section}{\numberline {7.10}M\'odulo de Vacunas}{55}{section.7.10}%
+\contentsline {section}{\numberline {7.11}M\'odulo de Hospitalizaci\'on}{56}{section.7.11}%
+\contentsline {section}{\numberline {7.12}M\'odulo de Planes de Tratamiento}{57}{section.7.12}%
+\contentsline {section}{\numberline {7.13}M\'odulo de Consentimientos Informados}{58}{section.7.13}%
+\contentsline {section}{\numberline {7.14}M\'odulo de Odontograma}{59}{section.7.14}%
+\contentsline {section}{\numberline {7.15}M\'odulo de Pagos Online (Stripe)}{59}{section.7.15}%
+\contentsline {section}{\numberline {7.16}M\'odulo de Reserva P\'ublica}{60}{section.7.16}%
+\contentsline {section}{\numberline {7.17}M\'odulo de Reportes}{60}{section.7.17}%
+\contentsline {section}{\numberline {7.18}M\'odulo de Auditor\'ia}{60}{section.7.18}%
+\contentsline {section}{\numberline {7.19}M\'odulo de Configuraci\'on}{61}{section.7.19}%
+\contentsline {section}{\numberline {7.20}M\'odulo de Notificaciones}{62}{section.7.20}%
+\contentsline {section}{\numberline {7.21}Sistema de Temas}{63}{section.7.21}%
+\contentsline {section}{\numberline {7.22}Credenciales de Prueba}{63}{section.7.22}%
+\contentsline {chapter}{\numberline {8}Pruebas}{64}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Enfoque de Pruebas}{64}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Ejecuci\'on de Pruebas}{64}{section.8.2}%
+\contentsline {section}{\numberline {8.3}Clases de Prueba}{65}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}VeterinarySystemIntegrationTest}{65}{subsection.8.3.1}%
+\contentsline {subsection}{\numberline {8.3.2}NewFeaturesIntegrationTest}{66}{subsection.8.3.2}%
+\contentsline {section}{\numberline {8.4}Configuraci\'on de Pruebas}{67}{section.8.4}%
+\contentsline {section}{\numberline {8.5}Ejemplo: Prueba de Creaci\'on de Factura con Descuento de Stock}{67}{section.8.5}%
+\contentsline {section}{\numberline {8.6}Ejemplo: Prueba de Endpoints P\'ublicos}{68}{section.8.6}%
+\contentsline {section}{\numberline {8.7}Cobertura de Pruebas}{68}{section.8.7}%
+\contentsline {chapter}{\numberline {9}Despliegue}{70}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Requisitos del Servidor}{70}{section.9.1}%
+\contentsline {section}{\numberline {9.2}Configuraci\'on de Base de Datos}{70}{section.9.2}%
+\contentsline {subsection}{\numberline {9.2.1}Crear Base de Datos PostgreSQL}{70}{subsection.9.2.1}%
+\contentsline {subsection}{\numberline {9.2.2}Verificar Conexi\'on}{70}{subsection.9.2.2}%
+\contentsline {section}{\numberline {9.3}Ejecuci\'on en Desarrollo}{71}{section.9.3}%
+\contentsline {section}{\numberline {9.4}Compilaci\'on para Producci\'on}{71}{section.9.4}%
+\contentsline {section}{\numberline {9.5}Despliegue con Docker}{71}{section.9.5}%
+\contentsline {subsection}{\numberline {9.5.1}Dockerfile}{71}{subsection.9.5.1}%
+\contentsline {subsection}{\numberline {9.5.2}Docker Compose}{72}{subsection.9.5.2}%
+\contentsline {section}{\numberline {9.6}Despliegue con systemd (Producci\'on Linux)}{72}{section.9.6}%
+\contentsline {section}{\numberline {9.7}Proxy Inverso con Nginx}{73}{section.9.7}%
+\contentsline {section}{\numberline {9.8}Variables de Entorno}{74}{section.9.8}%
+\contentsline {section}{\numberline {9.9}Estructura Completa del Proyecto}{74}{section.9.9}%
+\contentsline {section}{\numberline {9.10}Comandos \'Utiles}{75}{section.9.10}%
+\contentsline {section}{\numberline {9.11}Resoluci\'on de Problemas}{75}{section.9.11}%
+\contentsline {subsection}{\numberline {9.11.1}Error de Conexi\'on a Base de Datos}{75}{subsection.9.11.1}%
+\contentsline {subsection}{\numberline {9.11.2}Puerto Ocupado}{76}{subsection.9.11.2}%
+\contentsline {subsection}{\numberline {9.11.3}Error de Compilaci\'on}{76}{subsection.9.11.3}%
+\contentsline {subsection}{\numberline {9.11.4}Error de JWT}{76}{subsection.9.11.4}%
+\contentsline {subsection}{\numberline {9.11.5}WebSocket no conecta}{76}{subsection.9.11.5}%

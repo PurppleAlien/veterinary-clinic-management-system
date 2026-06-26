@@ -1,0 +1,167 @@
+\chapter{Modelo de Datos}
+
+\section{Diagrama Entidad-Relaci\'on}
+
+El sistema cuenta con 19 tablas principales m\'as 1 tabla de auditor\'ia. JPA genera autom\'aticamente el esquema con \texttt{spring.jpa.hibernate.ddl-auto=update}.
+
+\subsection{Entidades del Sistema}
+
+\subsubsection*{Veterinario (veterinarios)}
+Almacena los usuarios del sistema: administradores, veterinarios y recepcionistas.
+\begin{lstlisting}[language=Java, caption=Entidad Veterinario]
+@Entity @Table(name = "veterinarios")
+public class Veterinario {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @NotBlank private String nombre;
+    @NotBlank private String apellido;
+    @NotBlank @Column(unique = true) private String email;
+    @NotBlank private String passwordHash;  // BCrypt
+    private String telefono;
+    private String especialidad;
+    private String cedulaProfesional;
+    @Enumerated(EnumType.STRING) private RolUsuario rol;
+    private LocalTime horarioInicio;
+    private LocalTime horarioFin;
+    private Integer duracionTurnoMinutos = 30;
+    private Boolean activo = true;
+    // Auditoria: createdAt, updatedAt
+}
+\end{lstlisting}
+
+\subsubsection*{Cliente (clientes)}
+Due\~nos de mascotas con opci\'on de portal web.
+\begin{lstlisting}[language=Java, caption=Entidad Cliente]
+@Entity @Table(name = "clientes")
+public class Cliente {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @NotBlank private String nombre;
+    @NotBlank private String apellido;
+    @Email @NotBlank private String email;
+    private String telefono;
+    private String direccion;
+    private String portalEmail;          // Login para portal cliente
+    private String portalPasswordHash;   // BCrypt
+    private Boolean portalActivo = false;
+    @OneToMany(mappedBy = "cliente") private List<Mascota> mascotas;
+}
+\end{lstlisting}
+
+\subsubsection*{Mascota (mascotas)}
+Pacientes del sistema, vinculados a un cliente due\~no.
+\begin{lstlisting}[language=Java, caption=Entidad Mascota]
+@Entity @Table(name = "mascotas")
+public class Mascota {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @NotBlank private String nombre;
+    @Enumerated(EnumType.STRING) private Especie especie;
+    private String raza, color;
+    @Enumerated(EnumType.STRING) private GeneroMascota genero;
+    private LocalDate fechaNacimiento;
+    private Double peso;
+    @Column(columnDefinition = "TEXT") private String alergias;
+    @Column(columnDefinition = "TEXT") private String condicionesMedicas;
+    @ManyToOne @JoinColumn(name = "cliente_id") private Cliente cliente;
+}
+\end{lstlisting}
+
+\subsubsection*{Cita (citas)}
+Agendamiento de consultas con control de disponibilidad.
+\begin{lstlisting}[language=Java, caption=Entidad Cita]
+@Entity @Table(name = "citas")
+public class Cita {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @ManyToOne private Mascota mascota;
+    @ManyToOne private Veterinario veterinario;
+    @ManyToOne private Cliente cliente;
+    @NotNull private LocalDateTime fechaHoraInicio;
+    @NotNull private LocalDateTime fechaHoraFin;
+    @NotBlank private String motivo;
+    @Column(columnDefinition = "TEXT") private String notas;
+    @Enumerated(EnumType.STRING) private EstadoCita estado;
+    private String motivoCancelacion;
+}
+\end{lstlisting}
+
+\subsubsection*{Factura (facturas)}
+Facturaci\'on con detalle de items y control de pagos.
+\begin{lstlisting}[language=Java, caption=Entidad Factura]
+@Entity @Table(name = "facturas")
+public class Factura {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @NotBlank @Column(unique = true) private String numeroFactura;
+    @ManyToOne private Cliente cliente;
+    @ManyToOne private Veterinario veterinario;
+    @ManyToOne private Cita cita;  // Opcional
+    private LocalDateTime fechaEmision;
+    private Double subtotal = 0.0;
+    private Double descuentoTotal = 0.0;
+    private Double total = 0.0;
+    @Enumerated(EnumType.STRING) private EstadoFactura estado;
+    private Double totalPagado = 0.0;
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL)
+    private List<DetalleFactura> detalles;
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL)
+    private List<Pago> pagos;
+}
+\end{lstlisting}
+
+\subsection{Enumeraciones}
+
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Enumeraci\'on} & \textbf{Valores} \\
+\hline
+RolUsuario & ADMIN, VETERINARIO, RECEPCIONISTA \\
+EstadoCita & PROGRAMADA, CONFIRMADA, EN\_CURSO, COMPLETADA, CANCELADA, NO\_ASISTIO \\
+EstadoFactura & PENDIENTE, PAGADA\_PARCIAL, PAGADA, ANULADA \\
+MetodoPago & EFECTIVO, TARJETA\_CREDITO, TARJETA\_DEBITO, TRANSFERENCIA, CHEQUE \\
+Especie & CANINO, FELINO, EQUINO, BOVINO, AVIAR, EXOTICO, OTRO \\
+GeneroMascota & MACHO, HEMBRA \\
+EstadoHospitalizacion & HOSPITALIZADO, DADO\_ALTA \\
+EstadoPlan & ACTIVO, COMPLETADO, CANCELADO \\
+EstadoPaso & PENDIENTE, EN\_PROCESO, COMPLETADO, OMITIDO \\
+TipoMovimiento & ENTRADA, SALIDA, AJUSTE \\
+\hline
+\end{longtable}
+
+\subsection{Relaciones Principales}
+
+\begin{verbatim}
+Cliente (1) ---- Mascota (N) ---- Cita (N) ---- Veterinario (1)
+                                    |
+                              HistorialMedico
+                              Vacuna
+                              Factura ---- DetalleFactura ---- Servicio / Medicamento
+                                          ---- Pago
+                              PlanTratamiento ---- PasoTratamiento
+\end{verbatim}
+
+\subsection{Listado Completo de Repositorios}
+
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Repositorio} & \textbf{Consultas Personalizadas} \\
+\hline
+ClienteRepository & findByPortalEmail, findByEmail, b\'usqueda de texto libre (nombre, apellido, email) \\
+MascotaRepository & findByClienteId, findByClienteIdOrderByNombreAsc \\
+VeterinarioRepository & findByEmail, findByRol, findByActivoTrue, existsByEmail \\
+CitaRepository & findByVeterinarioId, findByClienteId, findByMascotaId, findByEstado, findCitasOcupadas (JPQL), findCitasDelDia (JPQL) \\
+ServicioRepository & findByActivoTrue \\
+MedicamentoRepository & findByActivoTrue, findByStockActualLessThanEqual \\
+FacturaRepository & findByClienteId, sumIngresosByFecha (JPQL aggregate) \\
+VacunaRepository & findByMascotaId, findByFechaProximaDosisBetween \\
+HistorialMedicoRepository & findByMascotaId, findByCitaId \\
+HospitalizacionRepository & findByMascotaId, findByEstado \\
+PlanTratamientoRepository & findByMascotaId \\
+PasoTratamientoRepository & findByPlanTratamientoIdOrderByOrdenAsc \\
+ConsentimientoRepository & findByClienteId, findByVeterinarioId \\
+OdontogramaRepository & findByMascotaId \\
+MovimientoInventarioRepository & findByMedicamentoId \\
+AuditLogRepository & findAllByOrderByFechaAccionDesc \\
+\hline
+\end{longtable}

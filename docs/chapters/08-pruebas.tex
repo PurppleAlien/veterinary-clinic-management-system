@@ -1,0 +1,200 @@
+\chapter{Pruebas}
+
+\section{Enfoque de Pruebas}
+
+El proyecto utiliza pruebas de integraci\'on con JUnit 5 y Spring Boot Test. Las pruebas se ejecutan contra una base de datos H2 en memoria, lo que permite validar el funcionamiento completo del sistema sin dependencias externas. Se siguen las siguientes pr\'acticas:
+
+\begin{itemize}
+    \item \textbf{Orden de ejecuci\'on:} Las pruebas se ejecutan en orden (\texttt{@TestMethodOrder(MethodName)} o \texttt{@Order}) para mantener consistencia en el estado de la base de datos.
+    \item \textbf{Autenticaci\'on previa:} Cada clase de prueba autentica primero al usuario correspondiente (admin, vet, cliente) y reutiliza el token JWT obtenido.
+    \item \textbf{Data inicial:} Los datos de prueba se cargan mediante \texttt{DataInitializer} al iniciar el contexto de Spring.
+    \item \textbf{Configuraci\'on aislada:} Archivo \texttt{application.properties} espec\'ifico para pruebas con H2 y logging reducido.
+\end{itemize}
+
+\section{Ejecuci\'on de Pruebas}
+
+\begin{lstlisting}[caption=Comando para ejecutar todas las pruebas]
+mvn test
+\end{lstlisting}
+
+Para ejecutar una prueba espec\'ifica:
+
+\begin{lstlisting}[caption=Ejecutar prueba individual]
+mvn test -Dtest=VeterinarySystemIntegrationTest
+mvn test -Dtest=NewFeaturesIntegrationTest#testCreateFactura
+\end{lstlisting}
+
+\section{Clases de Prueba}
+
+\subsection{VeterinarySystemIntegrationTest}
+
+Contiene 15 pruebas de integraci\'on que cubren el flujo b\'asico del sistema:
+
+\begin{enumerate}
+    \item \texttt{testLoginAdmin}: Inicio de sesi\'on como administrador, obtenci\'on de JWT y verificaci\'on de claims.
+    \item \texttt{testLoginVet}: Inicio de sesi\'on como veterinario con rol VETERINARIO.
+    \item \texttt{testDashboard}: Acceso al dashboard con token de administrador.
+    \item \texttt{testGetClientes}: Listado paginado de clientes.
+    \item \texttt{testGetMascotas}: Listado de mascotas filtradas por cliente.
+    \item \texttt{testCreateCita}: Creaci\'on de cita con validaci\'on de disponibilidad.
+    \item \texttt{testGetServicios}: Consulta de servicios activos.
+    \item \texttt{testGetMedicamentos}: Consulta de medicamentos activos.
+    \item \texttt{testCreateFactura}: Creaci\'on de factura con descuento autom\'atico de stock.
+    \item \texttt{testGetFacturaPdf}: Generaci\'on y verificaci\'on de PDF de factura.
+    \item \texttt{testHistorialMedico}: Consulta de historial m\'edico por mascota.
+    \item \texttt{testHospitalizaciones}: Listado de hospitalizaciones activas.
+    \item \texttt{testPortalAccessDenied}: Verificaci\'on de que un veterinario no accede al portal de cliente.
+    \item \texttt{testLoginCliente}: Inicio de sesi\'on como cliente y acceso al portal.
+    \item \texttt{testDeleteCita}: Eliminaci\'on l\'ogica de cita.
+\end{enumerate}
+
+\begin{lstlisting}[language=Java, caption=Ejemplo: autenticaci\'on como admin y prueba de dashboard]
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@TestMethodOrder(MethodName.class)
+class VeterinarySystemIntegrationTest {
+
+    @Autowired private TestRestTemplate restTemplate;
+    private static String adminToken;
+    private static Long clienteId;
+    private static Long facturaId;
+
+    @Test
+    @Order(1)
+    void testLoginAdmin() {
+        LoginRequest req = new LoginRequest("admin@petclinic.com",
+            "Admin123", "PERSONAL");
+        ResponseEntity<LoginResponse> res = restTemplate.postForEntity(
+            "/api/auth/login", req, LoginResponse.class);
+        assertEquals(HttpStatus.OK, res.getStatusCode());
+        assertNotNull(res.getBody().getToken());
+        adminToken = res.getBody().getToken();
+    }
+
+    @Test
+    @Order(2)
+    void testDashboard() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> res = restTemplate.exchange(
+            "/api/medico/dashboard", HttpMethod.GET, entity, Map.class);
+        assertEquals(HttpStatus.OK, res.getStatusCode());
+        assertNotNull(res.getBody().get("totalClientes"));
+    }
+}
+\end{lstlisting}
+
+\subsection{NewFeaturesIntegrationTest}
+
+Contiene 15 pruebas adicionales que cubren funcionalidades nuevas y endpoints p\'ublicos:
+
+\begin{enumerate}
+    \item \texttt{testLoginAdmin / testLoginVet}: Pruebas de autenticaci\'on para ambos roles.
+    \item \texttt{testPublicListVeterinarios}: Listado p\'ublico de veterinarios activos sin autenticaci\'on.
+    \item \texttt{testPublicSlots}: Visualizaci\'on de slots disponibles para una fecha y veterinario.
+    \item \texttt{testPublicSlotsInvalidVet}: Veterinario inv\'alido retorna 404.
+    \item \texttt{testPublicCreateCita}: Creaci\'on de cita p\'ublica como visitante.
+    \item \texttt{testPublicCreateCitaWrongEmail}: Email incorrecto retorna 400.
+    \item \texttt{testCreateFacturaForPayment}: Creaci\'on de factura para prueba de pago.
+    \item \texttt{testCreatePaymentIntentUnauthenticated}: Pago requiere autenticaci\'on (retorna 401).
+    \item \texttt{testCreatePaymentIntent}: Creaci\'on de intenci\'on de pago Stripe.
+    \item \texttt{testCreatePaymentIntentInvalidFactura}: Factura inv\'alida retorna 400.
+    \item \texttt{testVacunasForMascota}: Listado de vacunas por mascota.
+    \item \texttt{testCitaCreateTriggersNotification}: Creaci\'on de cita dispara notificaci\'on programada.
+    \item \texttt{testAllNewServiceBeansExist}: Verificaci\'on de que todos los beans de servicios se cargan correctamente.
+    \item \texttt{testPublicEndpointsNoAuthRequired}: Endpoints p\'ublicos accesibles sin token.
+    \item \texttt{testPaymentEndpointRequiresAuth}: Endpoint de pago protegido correctamente.
+\end{enumerate}
+
+\section{Configuraci\'on de Pruebas}
+
+Las pruebas utilizan una configuraci\'on espec\'ifica en \texttt{src/test/resources/application.properties}:
+
+\begin{lstlisting}[caption=Configuraci\'on para pruebas de integraci\'on]
+# Base de datos en memoria H2
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+spring.datasource.driver-class-name=org.h2.Driver
+spring.jpa.hibernate.ddl-auto=create-drop
+
+# JWT para pruebas (clave fija)
+app.jwt.secret=TestSecretKeyForTestingPurposesOnly2024!!
+app.jwt.expiration=3600000
+
+# Email desactivado en pruebas
+spring.mail.port=-1
+
+# Logging reducido para pruebas
+logging.level.com.veterinary=WARN
+\end{lstlisting}
+
+\section{Ejemplo: Prueba de Creaci\'on de Factura con Descuento de Stock}
+
+\begin{lstlisting}[language=Java, caption=Prueba de integraci\'on para creaci\'on de factura]
+@Test
+@Order(9)
+void testCreateFactura() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(adminToken);
+    headers.setContentType(MediaType.APPLICATION_JSON);
+
+    String body = """
+    {
+        "clienteId": %d,
+        "detalles": [
+            {"tipoItem": "SERVICIO", "servicioId": 1,
+             "descripcionLinea": "Consulta General",
+             "cantidad": 1, "precioUnitario": 500},
+            {"tipoItem": "MEDICAMENTO", "medicamentoId": 1,
+             "descripcionLinea": "Amoxicilina",
+             "cantidad": 2, "precioUnitario": 15}
+        ]
+    }
+    """.formatted(clienteId);
+
+    HttpEntity<String> entity = new HttpEntity<>(body, headers);
+    ResponseEntity<Map> res = restTemplate.exchange(
+        "/api/medico/facturas", HttpMethod.POST, entity, Map.class);
+
+    assertEquals(HttpStatus.OK, res.getStatusCode());
+    assertNotNull(res.getBody().get("numeroFactura"));
+    assertEquals(530.0, (Double) res.getBody().get("total"), 0.01);
+    facturaId = ((Number) res.getBody().get("id")).longValue();
+}
+\end{lstlisting}
+
+\section{Ejemplo: Prueba de Endpoints P\'ublicos}
+
+\begin{lstlisting}[language=Java, caption=Prueba de agenda p\'ublica sin autenticaci\'on]
+@Test
+void testPublicSlots() {
+    ResponseEntity<String> res = restTemplate.getForEntity(
+        "/api/public/slots?vetId=1&fecha="
+        + LocalDate.now().plusDays(1).toString(),
+        String.class);
+    assertEquals(HttpStatus.OK, res.getStatusCode());
+    assertTrue(res.getBody().contains("hora"));
+    assertTrue(res.getBody().contains("disponible"));
+}
+
+@Test
+void testPublicEndpointsNoAuthRequired() {
+    ResponseEntity<String> res = restTemplate.getForEntity(
+        "/api/public/veterinarios", String.class);
+    assertEquals(HttpStatus.OK, res.getStatusCode());
+}
+\end{lstlisting}
+
+\section{Cobertura de Pruebas}
+
+Las 30 pruebas de integraci\'on cubren las siguientes \'areas del sistema:
+
+\begin{itemize}
+    \item \textbf{Autenticaci\'on (6):} Login como ADMIN, VETERINARIO, RECEPCIONISTA y CLIENTE; validaci\'on de credenciales incorrectas; protecci\'on de endpoints.
+    \item \textbf{CRUD (8):} Creaci\'on, lectura, actualizaci\'on y eliminaci\'on de entidades principales (clientes, mascotas, citas, facturas).
+    \item \textbf{Reglas de negocio (5):} Validaci\'on de disponibilidad de citas, descuento de stock en facturaci\'on, control de acceso por roles, validaci\'on de email en reserva p\'ublica.
+    \item \textbf{Integraci\'on (4):} WebSocket, notificaciones por email, generaci\'on de PDF con iText, exportaci\'on Excel.
+    \item \textbf{Pagos (3):} Creaci\'on de Payment Intent, webhook de Stripe, protecci\'on de endpoint de pago.
+    \item \textbf{Reserva p\'ublica (3):} Listado de veterinarios, slots disponibles, creaci\'on de cita sin autenticaci\'on.
+    \item \textbf{Existencia de beans (1):} Verificaci\'on de que todos los servicios se cargan en el contexto de Spring.
+\end{itemize}
