@@ -22,6 +22,31 @@ Proyecto inspirado en dental-clinic-management-system, adaptado con lógica de n
 
 ---
 
+## 📸 Capturas de Pantalla
+
+### Inicio de Sesión
+![Login](docs/images/01-login.png)
+
+### Dashboard
+![Dashboard](docs/images/02-dashboard.png)
+
+### Agenda de Citas
+![Agenda](docs/images/03-agenda.png)
+
+### Gestión de Clientes
+![Clientes](docs/images/04-clientes.png)
+
+### Mascotas
+![Mascotas](docs/images/05-mascotas.png)
+
+### Facturación
+![Facturación](docs/images/06-facturacion.png)
+
+### Portal del Cliente
+![Portal Cliente](docs/images/19-portal-cliente.png)
+
+---
+
 ## 🛠 Tecnologías
 
 | Capa | Tecnología |
